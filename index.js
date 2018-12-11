@@ -1,4 +1,4 @@
-document.onload = () => {
+window.onload = () => {
   let input = document.getElementById('input');
   let log = document.getElementById('log');
   let enter = document.getElementById('enter');
@@ -11,6 +11,10 @@ document.onload = () => {
     let commandIndex = 0;
     let quote = false;
     for (let i = 0; i < script.length; i++) {
+      console.log("Quote: " + quote);
+      console.log("Command Index: " + commandIndex);
+      console.log("Command: ");
+      console.log(command);
       if (quote) {
         if (script[i] === '"' && script[i - 1] !== '\\') {
           quote = false;
@@ -21,10 +25,13 @@ document.onload = () => {
           quote = true;
         }
         command[commandIndex] = command[commandIndex] + script[i];
-      } else if (script[i] === '\n' || script === ';') {
+      } else if (script[i] === '\n' || script[i] === ';') {
         commands.push(command);
         command = [];
         commandIndex = 0;
+        if (quote) {
+          throw "Newline Before Quote End!";
+        }
       } else {
         commandIndex++;
       }
