@@ -7,10 +7,12 @@ window.onload = () => {
     let value = input.value.replace(new RegExp(' \\\n', 'g'), '');
     let script = value.split('');
     let commands = [];
-    let command = [];
+    let command = [""];
     let commandIndex = 0;
     let quote = false;
     for (let i = 0; i < script.length; i++) {
+      console.log(command);
+      console.log(quote);
       if (quote) {
         if (script[i] === '"' && script[i - 1] !== '\\') {
           quote = false;
@@ -23,7 +25,7 @@ window.onload = () => {
         command[commandIndex] = command[commandIndex] + script[i];
       } else if (script[i] === '\n' || script[i] === ';') {
         commands.push(command);
-        command = [];
+        command = [""];
         commandIndex = 0;
         if (quote) {
           throw "Newline Before Quote End!";
