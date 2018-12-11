@@ -4,7 +4,7 @@ window.onload = () => {
   let enter = document.getElementById('enter');
 
   enter.onclick = () => {
-    let value = input.value.replace(new RegExp(' \\\n', 'g'), '');
+    let value = input.value.replace(new RegExp(' \\\n', 'g'), '') + '\n';
     let script = value.split('');
     let commands = [];
     let command = [""];
