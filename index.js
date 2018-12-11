@@ -18,11 +18,6 @@ window.onload = () => {
           quote = false;
         }
         command[commandIndex] = command[commandIndex] + script[i];
-      } else if (script[i] !== ' ') {
-        if (script[i] === '"') {
-          quote = true;
-        }
-        command[commandIndex] = command[commandIndex] + script[i];
       } else if (script[i] === '\n' || script[i] === ';') {
         commands.push(command);
         command = [""];
@@ -30,8 +25,14 @@ window.onload = () => {
         if (quote) {
           throw "Newline Before Quote End!";
         }
+      } else if (script[i] !== ' ') {
+        if (script[i] === '"') {
+          quote = true;
+        }
+        command[commandIndex] = command[commandIndex] + script[i];
       } else {
         commandIndex++;
+        command[commandIndex] = "";
       }
     }
     console.log(commands);
