@@ -11,17 +11,13 @@ window.onload = () => {
     let commandIndex = 0;
     let quote = false;
     for (let i = 0; i < script.length; i++) {
-      console.log("Quote: " + quote);
-      console.log("Command Index: " + commandIndex);
-      console.log("Command: ");
-      console.log(command);
       if (quote) {
         if (script[i] === '"' && script[i - 1] !== '\\') {
           quote = false;
         }
         command[commandIndex] = command[commandIndex] + script[i];
       } else if (script[i] !== ' ') {
-        if (script[i] !== '"') {
+        if (script[i] === '"') {
           quote = true;
         }
         command[commandIndex] = command[commandIndex] + script[i];
