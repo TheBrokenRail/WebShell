@@ -11,8 +11,6 @@ window.onload = () => {
     let commandIndex = 0;
     let quote = false;
     for (let i = 0; i < script.length; i++) {
-      console.log(command);
-      console.log(quote);
       if (quote) {
         if (script[i] === '"' && script[i - 1] !== '\\') {
           quote = false;
