@@ -4,8 +4,13 @@ window.onload = () => {
   let enter = document.getElementById('enter');
 
   const print = str => {
-    log.value = log.value + str;
+    if (!customPrint) {
+      log.value = log.value + str;
+    } else {
+      customPrint(str);
+    }
   };
+  let customPrint = null;
   const err = str => {
     print(str.toString());
     throw str;
@@ -76,10 +81,26 @@ window.onload = () => {
         }
       }
     } else if (command[0] === 'echo') {
-      print(getString(command[1]) + '\n');
+      for (let i = 1; i < command.length; i++) {
+        print(getString(command[i]));
+      }
+      print('\n');
     } else if (command[0] === 'set') {
       if (new RegExp('^[a-z0-9]+$', 'i').test(command[1])) {
-        env[command[1]] = command[2];
+        env[command[1]] = getString(command[2]);
+      } else {
+        err("Varaible Names Can Only Contain Letters and Numbers");
+      }
+    } else if (command[0] === 'setsh') {
+      if (new RegExp('^[a-z0-9]+$', 'i').test(command[1])) {
+        customPrint = str => {
+          if (!env[command[1]]) {
+            env[command[1]] = '';
+          }
+          env[command[1]] = env[command[1]] + str.replace(new RegExp('\n', 'g'), '');
+        };
+        run(env, command.slice(2));
+        customPrint = null;
       } else {
         err("Varaible Names Can Only Contain Letters and Numbers");
       }
@@ -132,6 +153,7 @@ window.onload = () => {
     return newCommand;
   };
   enter.onclick = () => {
+    customPrint = null;
     log.value = '';
     let commands = parse();
     let prefix = [];
