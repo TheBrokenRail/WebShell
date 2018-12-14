@@ -1,22 +1,48 @@
-window.onload = () => {
-  let input = document.getElementById('input');
-  let log = document.getElementById('log');
-  let enter = document.getElementById('enter');
-
-  const print = str => {
-    if (!customPrint) {
-      log.value = log.value + str;
+class WebShell {
+  constructor(log) {
+    this.line = 0;
+    this.log = log;
+    this.customPrint = null;
+  }
+  print(str) {
+    if (this.customPrint) {
+      this.customPrint(str);
     } else {
-      customPrint(str);
+      this.log(str);
     }
-  };
-  let customPrint = null;
-  const err = str => {
-    print(str.toString());
-    throw str;
-  };
-  const parse = () => {
-    let original = input.value.split('\n');
+  }
+  err(str) {
+    throw new Error(str.toString());
+  }
+  isEscaped(arr, k) {
+    let escaped = false;
+    for (let i = 0; i < arr.length; i++) {
+      if (i === k) {
+        return escaped;
+      } else if (escaped) {
+        escaped = false;
+      } else if (arr[i] === '\\') {
+        escaped = true;
+      }
+    }
+  }
+  unEscape(arr) {
+    let escaped = false;
+    let newArr = [];
+    for (let i = 0; i < arr.length; i++) {
+      if (escaped) {
+        escaped = false;
+      } else if (arr[i] === '\\') {
+        escaped = true;
+      }
+      if (!escaped) {
+        newArr.push(arr[i]);
+      }
+    }
+    return newArr;
+  }
+  parse(input) {
+    let original = input.split('\n');
     for (let i = 0; i < original.length; i++) {
       original[i] = original[i].trim();
     }
@@ -27,21 +53,23 @@ window.onload = () => {
     let command = [""];
     let commandIndex = 0;
     let quote = false;
+    this.line = 1;
     for (let i = 0; i < script.length; i++) {
-      if (quote) {
-        if (script[i] === '"' && (i < 1 || script[i - 1] !== '\\')) {
-          quote = false;
+      if (script[i] === '\n' || script[i] === ';') {
+        if (quote) {
+          this.err('Missing End Quote');
         }
-        command[commandIndex] = command[commandIndex] + script[i];
-      } else if (script[i] === '\n' || script[i] === ';') {
+        this.line++;
         commands.push(command);
         command = [""];
         commandIndex = 0;
-        if (quote) {
-          err('Newline Before Quote End!');
+      } else if (quote) {
+        if (script[i] === '"' && !this.isEscaped(script, i)) {
+          quote = false;
         }
+        command[commandIndex] = command[commandIndex] + script[i];
       } else if (script[i] !== ' ') {
-        if (script[i] === '"') {
+        if (script[i] === '"' && !this.isEscaped(script, i)) {
           quote = true;
         }
         command[commandIndex] = command[commandIndex] + script[i];
@@ -51,65 +79,70 @@ window.onload = () => {
       }
     }
     return commands;
-  };
-  const getString = str => {
+  }
+  getString(str) {
     if (str.startsWith('"')) {
-      return JSON.parse(str);
+      if (!str.endsWith('"')) {
+        err('Missing End Quote');
+      }
+      str = str.slice(1, -1);
     }
-    return str;
-  };
-  const run = (env, command) => {
+    return this.unEscape(str.split('')).join('');
+  }
+  getStrings(arr) {
+    for (let i = 0; i < arr.length; i++) {
+      arr[i] = this.getString(arr[i]);
+    }
+    return arr;
+  }
+  runCommand(env, command) {
     if (command[0] === 'if') {
       let condition = command[2];
       let var1 = command[1];
       let var2 = command[3];
       let pass = false;
+      if (command.length < 5) {
+        this.err('If Missing Condition or Command');
+      }
       if (condition === '<') {
         pass = env[var1] && env[var2] && Number(env[var1]) < Number(env[var2]);
       } else if (condition === '>') {
         pass = env[var1] && env[var2] && Number(env[var1]) > Number(env[var2]);
       } else if (condition === '=') {
-        pass = env[var1] && env[var2] && getString(env[var1]) === getString(env[var2]);
+        pass = env[var1] && env[var2] && env[var1] === env[var2];
       } else if (condition === '!=') {
-        pass = env[var1] && env[var2] && getString(env[var1]) !== getString(env[var2]);
+        pass = env[var1] && env[var2] && env[var1] !== env[var2];
       }
       if (pass) {
-        if (command.length < 5) {
-          err('If Missing Condition or Command');
-        } else {
-          run(env, command.slice(4));
-        }
+        this.runCommand(env, command.slice(4));
       }
     } else if (command[0] === 'echo') {
-      for (let i = 1; i < command.length; i++) {
-        print(getString(command[i]));
-      }
-      print('\n');
+      this.print(command.slice(1).join(' ') + '\n');
     } else if (command[0] === 'set') {
       if (new RegExp('^[a-z0-9]+$', 'i').test(command[1])) {
-        env[command[1]] = getString(command[2]);
+        env[command[1]] = command[2];
       } else {
-        err("Varaible Names Can Only Contain Letters and Numbers");
+        this.err("Varaible Names Can Only Contain Letters and Numbers");
       }
     } else if (command[0] === 'setsh') {
       if (new RegExp('^[a-z0-9]+$', 'i').test(command[1])) {
-        customPrint = str => {
+        this.customPrint = str => {
           if (!env[command[1]]) {
             env[command[1]] = '';
           }
           env[command[1]] = env[command[1]] + str.replace(new RegExp('\n', 'g'), '');
         };
-        run(env, command.slice(2));
-        customPrint = null;
+        this.runCommand(env, command.slice(2));
+        this.customPrint = null;
       } else {
-        err("Varaible Names Can Only Contain Letters and Numbers");
+        this.err("Varaible Names Can Only Contain Letters and Numbers");
       }
     } else {
-      err('Unknown Command: ' + command[0]);
+      this.err('Unknown Command: ' + command[0]);
     }
     return env;
   }
-  const inputEnv = (env, command) => {
+  inputEnv(env, command) {
     let newCommand = [];
     for (let i = 0; i < command.length; i++) {
       let arr = command[i].split('');
@@ -117,7 +150,7 @@ window.onload = () => {
       let atVar = 0;
       let varIndex = 0;
       for (let k = 0; k < arr.length; k++) {
-        if (atVar == 0 && arr[k] === '$' && (k < 1 || arr[k - 1] !== '\\')) {
+        if (atVar == 0 && arr[k] === '$' && !this.isEscaped(arr, k)) {
           if (!vars[varIndex]) {
             vars[varIndex] = '';
           }
@@ -151,31 +184,43 @@ window.onload = () => {
       newCommand.push(section);
     }
     return newCommand;
-  };
-  enter.onclick = () => {
-    customPrint = null;
-    log.value = '';
-    let commands = parse();
-    let prefix = [];
-    let env = {};
-    for (let i = 0; i < commands.length; i++) {
-      if (commands[i][0] === 'if') {
-        prefix.push(commands[i]);
-      } else if (commands[i][0] === 'endif') {
-        prefix.pop();
-      } else {
-        try {
+  }
+  run(input) {
+    try {
+      this.customPrint = null;
+      let commands = this.parse(input);
+      let prefix = [];
+      let env = {};
+      for (let i = 0; i < commands.length; i++) {
+        if (commands[i][0] === 'if') {
+          prefix.push(commands[i]);
+        } else if (commands[i][0] === 'endif') {
+          prefix.pop();
+        } else {
           let flatPrefix = [];
           for (let k = 0; k < prefix.length; k++) {
             flatPrefix = flatPrefix.concat(prefix[k]);
           }
-          let command = inputEnv(env, flatPrefix.concat(commands[i]));
+          this.line = i + 1;
+          let command = this.getStrings(this.inputEnv(env, flatPrefix.concat(commands[i])));
           console.log('Running: ' + command.join(' '));
-          env = run(env, command);
-        } catch(e) {
-          err(e);
+          env = this.runCommand(env, command);
         }
       }
+    } catch (e) {
+      this.log(this.line + ': ' + e.toString().trim() + '\n');
     }
+  }
+}
+
+window.onload = () => {
+  let input = document.getElementById('input');
+  let log = document.getElementById('log');
+  let enter = document.getElementById('enter');
+
+  enter.onclick = () => {
+    log.value = '';
+    let webShell = new WebShell(str => log.value = log.value + str);
+    webShell.run(input.value);
   };
 };
