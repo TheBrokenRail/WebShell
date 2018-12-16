@@ -1,8 +1,19 @@
 const WebShell = require('./webShell');
-const webShell = new WebShell(false, str => process.stdout.write(str), () => process.exit());
-const readline = require('readline');
-const args = process.argv.slice(2);
 const fs = require('fs');
+const webShell = new WebShell(false, str => process.stdout.write(str), () => process.exit(), {
+  cat: (wsh, env, args) => {
+    if (args.length < 1) {
+      wsh.err('Not Enough Arguments');
+    }
+    if (fs.existsSync(args[0])) {
+      wsh.print(fs.readFileSync(args[0], 'utf8').trim() + '\n');
+    } else {
+      wsh.err('No Such File: ' + args[0]);
+    }
+  }
+});
+const readline = require('readline');
+const fileName = process.argv.slice(2)[0];
 
 const readLineInterface = readline.createInterface({
   input: process.stdin,
@@ -14,11 +25,11 @@ readLineInterface.on('line', line => {
   webShell.setUserInput(line);
 });
 
-if (args.length > 0) {
-  if (fs.existsSync(args[0])) {
-    webShell.run(fs.readFileSync(args[0], 'utf8'));
+if (fileName) {
+  if (fs.existsSync(fileName)) {
+    webShell.run(fs.readFileSync(fileName, 'utf8'));
   } else {
-    console.log('No Such File: ' + args[0]);
+    console.log('No Such File: ' + fileName);
     process.exit();
   }
 } else {

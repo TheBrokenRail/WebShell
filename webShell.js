@@ -1,13 +1,14 @@
 const WEBSHELL_VERSION = '1.0';
 
 class WebShell {
-  constructor(printInput, log, onEnd) {
+  constructor(printInput, log, onEnd, extraCommands) {
     this.line = 0;
     this.log = log;
     this.customPrint = null;
     this.userInputCallback = null;
     this.onEnd = onEnd;
     this.printInput = printInput;
+    this.extraCommands = extraCommands;
   }
   setUserInput(input) {
     if (this.userInputCallback) {
@@ -167,6 +168,11 @@ class WebShell {
       } else {
         this.err('Exit Code Not Implemented');
       }
+    } else if (this.extraCommands && this.extraCommands.hasOwnProperty(command[0])) {
+      let out = this.extraCommands[command[0]](this, env, command.slice(1));
+      if (out) {
+        return out;
+      }
     } else {
       this.err('Unknown Command: ' + command[0]);
     }
@@ -216,8 +222,10 @@ class WebShell {
     return newCommand;
   }
   runInternal(commands, prefix, env, index, repl) {
+    let currentCommand = '';
     try {
       for (let i = index; i < commands.length; i++) {
+        currentCommand = '';
         if (commands[i][0] !== '') {
           if (commands[i][0] === 'if') {
             if (commands[i].length > 4) {
@@ -233,6 +241,7 @@ class WebShell {
             }
             this.line = i + 1;
             let command = this.inputEnv(env, this.getStrings(flatPrefix.concat(commands[i])));
+            currentCommand = command[0] + ': ';
             let data = this.runCommand(env, command);
             env = data[0];
             if (data[1]) {
@@ -251,7 +260,7 @@ class WebShell {
         }
       }
     } catch (e) {
-      this.log(this.line + ': ' + e.toString().trim() + '\n');
+      this.log(this.line + ': ' + currentCommand + e.toString().trim() + '\n');
     }
     if (repl) {
       this.repl(false, prefix, env);
