@@ -1,0 +1,26 @@
+{
+  "name": "webshell",
+  "version": "1.0.0",
+  "description": "",
+  "main": "webShell.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheBrokenRail/WebShell.git"
+  },
+  "author": "TheBrokenRail",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TheBrokenRail/WebShell/issues"
+  },
+  "homepage": "https://github.com/TheBrokenRail/WebShell#readme",
+  "bin": {
+    "wsh": "./node.js",
+    "webshell": "./node.js"
+  }
+}

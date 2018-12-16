@@ -1,0 +1,29 @@
+echo "X: "
+input X
+
+echo "Y: "
+input Y
+
+if X > Y
+echo "X > Y"
+endif
+
+if Y > X
+echo "Y > X"
+endif
+
+if X < Y
+echo "X < Y"
+endif
+
+if Y < X
+echo "Y < X"
+endif
+
+if X = Y
+echo "X = Y"
+endif
+
+if Y != X
+echo "Y != X"
+endif

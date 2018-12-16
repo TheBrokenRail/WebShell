@@ -1,6 +1,6 @@
 importScripts('webShell.js');
 
-let webShell = new WebShell(str => postMessage(str), () => close());
+let webShell = new WebShell(true, str => postMessage(str), () => close());
 
 onmessage = e => {
   let type = e.data[0];

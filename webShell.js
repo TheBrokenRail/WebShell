@@ -1,15 +1,19 @@
 const WEBSHELL_VERSION = '1.0';
 
 class WebShell {
-  constructor(log, onEnd) {
+  constructor(printInput, log, onEnd) {
     this.line = 0;
     this.log = log;
     this.customPrint = null;
     this.userInputCallback = null;
     this.onEnd = onEnd;
+    this.printInput = printInput;
   }
   setUserInput(input) {
     if (this.userInputCallback) {
+      if (this.printInput) {
+        this.log(input + '\n');
+      }
       this.userInputCallback(input);
     }
   }
@@ -157,6 +161,12 @@ class WebShell {
       } else {
         this.err("Varaible Names Can Only Contain Letters and Numbers");
       }
+    } else if (command[0] === 'exit') {
+      if (this.onEnd) {
+        this.onEnd();
+      } else {
+        this.err('Exit Code Not Implemented');
+      }
     } else {
       this.err('Unknown Command: ' + command[0]);
     }
@@ -220,7 +230,6 @@ class WebShell {
             }
             this.line = i + 1;
             let command = this.inputEnv(env, this.getStrings(flatPrefix.concat(commands[i])));
-            console.log('Running: ' + command.join(' '));
             let data = this.runCommand(env, command);
             env = data[0];
             if (data[1]) {
@@ -273,7 +282,6 @@ class WebShell {
     this.log('>>> ');
     this.userInputCallback = input => {
       this.userInputCallback = null;
-      this.log(input + '\n');
       this.customPrint = null;
       let commands = null;
       try {
@@ -285,4 +293,8 @@ class WebShell {
       this.runInternal(commands, prefix, env, 0, true);
     };
   }
+}
+
+if (module && module.exports) {
+  module.exports = WebShell;
 }
