@@ -10,5 +10,7 @@ onmessage = e => {
     webShell.run(data);
   } else if (type === 'setUserInput') {
     webShell.setUserInput(data);
+  } else if (type === 'repl') {
+    webShell.repl(true);
   }
 };

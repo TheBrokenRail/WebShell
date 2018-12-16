@@ -32,11 +32,18 @@
   background-color: black;
   resize: none;
 }
-#enter {
+#repl {
   position: absolute;
   top: 55%;
   left: 80%;
-  height: 45%;
+  height: calc(45% / 2);
+  width: 20%;
+}
+#enter {
+  position: absolute;
+  top: calc(55% + 45% / 2);
+  left: 80%;
+  height: calc(45% / 2);
   width: 20%;
 }
 </style>
@@ -45,5 +52,6 @@
 <input id="userInput"></textarea>
 <textarea readonly id="log"></textarea>
 <button id="enter">Go</button>
+<button id="repl">REPL</button>
 <button id="enterInput">Enter</button>
 </html>

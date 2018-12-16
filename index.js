@@ -11,6 +11,12 @@ class WebShellWorker {
   setUserInput(data) {
     this.worker.postMessage(['setUserInput', data]);
   }
+  repl() {
+    this.worker.postMessage(['repl']);
+  }
+  stop() {
+    this.worker.terminate();
+  }
 }
 
 window.onload = () => {
@@ -20,6 +26,9 @@ window.onload = () => {
 
   let userInput = document.getElementById('userInput');
   let enterInput = document.getElementById('enterInput');
+
+  let repl = document.getElementById('repl');
+
   window.webShell = null;
 
   enterInput.onclick = () => {
@@ -30,8 +39,22 @@ window.onload = () => {
   };
 
   enter.onclick = () => {
+    if (window.webShell) {
+      window.webShell.stop();
+    }
+
     log.value = '';
     window.webShell = new WebShellWorker(str => log.value = log.value + str);
     window.webShell.run(input.value);
+  };
+
+  repl.onclick = () => {
+    if (window.webShell) {
+      window.webShell.stop();
+    }
+
+    log.value = '';
+    window.webShell = new WebShellWorker(str => log.value = log.value + str);
+    window.webShell.repl();
   };
 };

@@ -1,3 +1,5 @@
+const WEBSHELL_VERSION = '1.0';
+
 class WebShell {
   constructor(log, onEnd) {
     this.line = 0;
@@ -136,7 +138,7 @@ class WebShell {
       }
     } else if (command[0] === 'set') {
       if (new RegExp('^[a-z0-9]+$', 'i').test(command[1])) {
-        return command[1];
+        env[command[1]] = command[2];
       } else {
         this.err("Varaible Names Can Only Contain Letters and Numbers");
       }
@@ -203,7 +205,7 @@ class WebShell {
     }
     return newCommand;
   }
-  runInternal(commands, prefix, env, index) {
+  runInternal(commands, prefix, env, index, repl) {
     try {
       for (let i = index; i < commands.length; i++) {
         if (commands[i][0] !== '') {
@@ -225,31 +227,62 @@ class WebShell {
               this.userInputCallback = input => {
                 this.userInputCallback = null;
                 env[data[1]] = input;
-                this.runInternal(commands, prefix, env, i + 1);
+                if (repl) {
+                  this.repl(false, prefix, env);
+                } else {
+                  this.runInternal(commands, prefix, env, i + 1, false);
+                }
               };
               return;
             }
           }
         }
       }
-      if (this.onEnd) {
-        this.onEnd();
-      }
     } catch (e) {
       this.log(this.line + ': ' + e.toString().trim() + '\n');
     }
+    if (repl) {
+      this.repl(false, prefix, env);
+    } else if (this.onEnd) {
+      this.onEnd();
+    }
   }
   run(input) {
+    let commands = null;
+    let prefix = [];
+    let env = {};
     try {
       this.customPrint = null;
-      let commands = this.parse(input);
-      let prefix = [];
-      let env = {};
-      this.runInternal(commands, prefix, env, 0);
+      commands = this.parse(input);
     } catch (e) {
       this.log(this.line + ': ' + e.toString().trim() + '\n');
       return;
     }
-    this.runInternal(commands, prefix, env, 0);
+    this.runInternal(commands, prefix, env, 0, false);
+  }
+  repl(showVersion, prefix, env) {
+    if (showVersion) {
+      this.log('WebShell v' + WEBSHELL_VERSION + ' REPL\n');
+    }
+    if (!env) {
+      env = {};
+    }
+    if (!prefix) {
+      prefix = [];
+    }
+    this.log('>>> ');
+    this.userInputCallback = input => {
+      this.userInputCallback = null;
+      this.log(input + '\n');
+      this.customPrint = null;
+      let commands = null;
+      try {
+        commands = this.parse(input);
+      } catch (e) {
+        this.log(this.line + ': ' + e.toString().trim() + '\n');
+        commands = [];
+      }
+      this.runInternal(commands, prefix, env, 0, true);
+    };
   }
 }
