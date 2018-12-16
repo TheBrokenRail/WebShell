@@ -1,9 +1,10 @@
 class WebShell {
-  constructor(log) {
+  constructor(log, onEnd) {
     this.line = 0;
     this.log = log;
     this.customPrint = null;
     this.userInputCallback = null;
+    this.onEnd = onEnd;
   }
   setUserInput(input) {
     if (this.userInputCallback) {
@@ -203,32 +204,39 @@ class WebShell {
     return newCommand;
   }
   runInternal(commands, prefix, env, index) {
-    for (let i = index; i < commands.length; i++) {
-      if (commands[i][0] !== '') {
-        if (commands[i][0] === 'if') {
-          prefix.push(commands[i]);
-        } else if (commands[i][0] === 'endif') {
-          prefix.pop();
-        } else {
-          let flatPrefix = [];
-          for (let k = 0; k < prefix.length; k++) {
-            flatPrefix = flatPrefix.concat(prefix[k]);
-          }
-          this.line = i + 1;
-          let command = this.inputEnv(env, this.getStrings(flatPrefix.concat(commands[i])));
-          console.log('Running: ' + command.join(' '));
-          let data = this.runCommand(env, command);
-          env = data[0];
-          if (data[1]) {
-            this.userInputCallback = input => {
-              this.userInputCallback = null;
-              env[data[1]] = input;
-              this.runInternal(commands, prefix, env, i + 1);
-            };
-            return;
+    try {
+      for (let i = index; i < commands.length; i++) {
+        if (commands[i][0] !== '') {
+          if (commands[i][0] === 'if') {
+            prefix.push(commands[i]);
+          } else if (commands[i][0] === 'endif') {
+            prefix.pop();
+          } else {
+            let flatPrefix = [];
+            for (let k = 0; k < prefix.length; k++) {
+              flatPrefix = flatPrefix.concat(prefix[k]);
+            }
+            this.line = i + 1;
+            let command = this.inputEnv(env, this.getStrings(flatPrefix.concat(commands[i])));
+            console.log('Running: ' + command.join(' '));
+            let data = this.runCommand(env, command);
+            env = data[0];
+            if (data[1]) {
+              this.userInputCallback = input => {
+                this.userInputCallback = null;
+                env[data[1]] = input;
+                this.runInternal(commands, prefix, env, i + 1);
+              };
+              return;
+            }
           }
         }
       }
+      if (this.onEnd) {
+        this.onEnd();
+      }
+    } catch (e) {
+      this.log(this.line + ': ' + e.toString().trim() + '\n');
     }
   }
   run(input) {
@@ -240,6 +248,8 @@ class WebShell {
       this.runInternal(commands, prefix, env, 0);
     } catch (e) {
       this.log(this.line + ': ' + e.toString().trim() + '\n');
+      return;
     }
+    this.runInternal(commands, prefix, env, 0);
   }
 }
