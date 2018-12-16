@@ -295,6 +295,6 @@ class WebShell {
   }
 }
 
-if (module && module.exports) {
+if (typeof module === 'object') {
   module.exports = WebShell;
 }
