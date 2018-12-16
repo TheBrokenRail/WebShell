@@ -220,6 +220,9 @@ class WebShell {
       for (let i = index; i < commands.length; i++) {
         if (commands[i][0] !== '') {
           if (commands[i][0] === 'if') {
+            if (commands[i].length > 4) {
+              this.err('Too Many Arguments');
+            }
             prefix.push(commands[i]);
           } else if (commands[i][0] === 'endif') {
             prefix.pop();
