@@ -2,10 +2,25 @@
 <style>
 #input {
   position: absolute;
+  top: 55%;
+  left: 0;
+  height: 45%;
+  width: 80%;
+  resize: none;
+}
+#userInput {
+  position: absolute;
   top: 50%;
   left: 0;
-  height: 50%;
+  height: 5%;
   width: 80%;
+}
+#enterInput {
+  position: absolute;
+  top: 50%;
+  left: 80%;
+  height: 5%;
+  width: 20%;
 }
 #log {
   position: absolute;
@@ -15,17 +30,20 @@
   height: 50%;
   color: white;
   background-color: black;
+  resize: none;
 }
 #enter {
   position: absolute;
-  top: 50%;
+  top: 55%;
   left: 80%;
-  height: 50%;
+  height: 45%;
   width: 20%;
 }
 </style>
 <script src="index.js"></script>
 <textarea id="input"></textarea>
+<input id="userInput"></textarea>
 <textarea readonly id="log"></textarea>
 <button id="enter">Go</button>
+<button id="enterInput">Enter</button>
 </html>
