@@ -169,7 +169,7 @@ class WebShell {
         this.err('Exit Code Not Implemented');
       }
     } else if (command[0] === 'goto') {
-      let line = Number(command[1]);
+      let line = parseInt(command[1]);
       if (!isNaN(line) && (line - 2) >= -1) {
         this.line = line - 2;
       } else {
