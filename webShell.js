@@ -168,6 +168,13 @@ class WebShell {
       } else {
         this.err('Exit Code Not Implemented');
       }
+    } else if (command[0] === 'goto') {
+      let line = Number(command[1]);
+      if (!isNaN(line)) {
+        this.line = line;
+      } else {
+        this.err('Not a Number');
+      }
     } else if (this.extraCommands && this.extraCommands.hasOwnProperty(command[0])) {
       let out = this.extraCommands[command[0]](this, env, command.slice(1));
       if (out) {
@@ -224,23 +231,22 @@ class WebShell {
   runInternal(commands, prefix, env, index, repl) {
     let currentCommand = '';
     try {
-      for (let i = index; i < commands.length; i++) {
+      for (this.line = index; this.line < commands.length; this.line++) {
         currentCommand = '';
-        if (commands[i][0] !== '') {
-          if (commands[i][0] === 'if') {
-            if (commands[i].length > 4) {
+        if (commands[this.line][0] !== '') {
+          if (commands[this.line][0] === 'if') {
+            if (commands[this.line].length > 4) {
               this.err('Too Many Arguments');
             }
-            prefix.push(commands[i]);
-          } else if (commands[i][0] === 'endif') {
+            prefix.push(commands[this.line]);
+          } else if (commands[this.line][0] === 'endif') {
             prefix.pop();
           } else {
             let flatPrefix = [];
             for (let k = 0; k < prefix.length; k++) {
               flatPrefix = flatPrefix.concat(prefix[k]);
             }
-            this.line = i + 1;
-            let command = this.inputEnv(env, this.getStrings(flatPrefix.concat(commands[i])));
+            let command = this.inputEnv(env, this.getStrings(flatPrefix.concat(commands[this.line])));
             currentCommand = command[0] + ': ';
             let data = this.runCommand(env, command);
             env = data[0];
@@ -251,7 +257,7 @@ class WebShell {
                 if (repl) {
                   this.repl(false, prefix, env);
                 } else {
-                  this.runInternal(commands, prefix, env, i + 1, false);
+                  this.runInternal(commands, prefix, env, this.line + 1, false);
                 }
               };
               return;
@@ -260,7 +266,7 @@ class WebShell {
         }
       }
     } catch (e) {
-      this.log(this.line + ': ' + currentCommand + e.toString().trim() + '\n');
+      this.log('Command ' + (this.line + 1) + ': ' + currentCommand + e.toString().trim() + '\n');
     }
     if (repl) {
       this.repl(false, prefix, env);
@@ -276,7 +282,7 @@ class WebShell {
       this.customPrint = null;
       commands = this.parse(input);
     } catch (e) {
-      this.log(this.line + ': ' + e.toString().trim() + '\n');
+      this.log('Line ' + this.line + ': ' + e.toString().trim() + '\n');
       return;
     }
     this.runInternal(commands, prefix, env, 0, false);
