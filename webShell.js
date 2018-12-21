@@ -170,8 +170,8 @@ class WebShell {
       }
     } else if (command[0] === 'goto') {
       let line = Number(command[1]);
-      if (!isNaN(line)) {
-        this.line = line;
+      if (!isNaN(line) && (line - 2) > 0) {
+        this.line = line - 2;
       } else {
         this.err('Not a Number');
       }
